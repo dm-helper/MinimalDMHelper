@@ -1,5 +1,5 @@
 #include "publishglframe.h"
-#include "publishglrenderer.h"
+#include "publishglmaprenderer.h"
 #include <QOpenGLFunctions>
 #include <QMouseEvent>
 #include <QTimer>
@@ -24,7 +24,7 @@ bool PublishGLFrame::isInitialized() const
     return _initialized;
 }
 
-PublishGLRenderer* PublishGLFrame::getRenderer() const
+PublishGLMapRenderer* PublishGLFrame::getRenderer() const
 {
     return _renderer;
 }
@@ -43,7 +43,7 @@ void PublishGLFrame::updateWidget()
     update();
 }
 
-void PublishGLFrame::setRenderer(PublishGLRenderer* renderer)
+void PublishGLFrame::setRenderer(PublishGLMapRenderer* renderer)
 {
     if(renderer == _renderer)
     {
@@ -54,8 +54,8 @@ void PublishGLFrame::setRenderer(PublishGLRenderer* renderer)
     if(_renderer)
     {
         _renderer->rendererDeactivated();
-        disconnect(_renderer, &PublishGLRenderer::updateWidget, this, &PublishGLFrame::updateWidget);
-        disconnect(_renderer, &PublishGLRenderer::destroyed, this, &PublishGLFrame::clearRenderer);
+        disconnect(_renderer, &PublishGLMapRenderer::updateWidget, this, &PublishGLFrame::updateWidget);
+        disconnect(_renderer, &PublishGLMapRenderer::destroyed, this, &PublishGLFrame::clearRenderer);
         if(_renderer->deleteOnDeactivation())
             _renderer->deleteLater();
     }
@@ -63,8 +63,8 @@ void PublishGLFrame::setRenderer(PublishGLRenderer* renderer)
     _renderer = renderer;
     if(_renderer)
     {
-        connect(_renderer, &PublishGLRenderer::updateWidget, this, &PublishGLFrame::updateWidget);
-        connect(_renderer, &PublishGLRenderer::destroyed, this, &PublishGLFrame::clearRenderer);
+        connect(_renderer, &PublishGLMapRenderer::updateWidget, this, &PublishGLFrame::updateWidget);
+        connect(_renderer, &PublishGLMapRenderer::destroyed, this, &PublishGLFrame::clearRenderer);
         _renderer->rendererActivated(this);
         if(isInitialized())
         {

@@ -13,7 +13,7 @@ const int stopComplete = stopCallComplete | stopConfirmed;
 const int INVALID_TRACK_ID = -99999;
 
 VideoPlayerGLPlayer::VideoPlayerGLPlayer(const QString& videoFile, QOpenGLContext* context, QSurfaceFormat format, QSize targetSize, bool playVideo, bool playAudio, QObject *parent) :
-    VideoPlayerGL(parent),
+    QObject(parent),
     _videoFile(videoFile),
     _context(context),
     _format(format),

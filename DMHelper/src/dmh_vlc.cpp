@@ -8,6 +8,14 @@ DMH_VLC::DMH_VLC() :
     _vlcInstance(nullptr)
 {
 #ifdef VIDEO_DEBUG_MESSAGES
+    /*
+    const char *args[] = {
+        "--no-hw-dec",
+        "--verbose=3",
+        ""
+    };
+    _vlcInstance = libvlc_new(sizeof(args) / sizeof(*args), args);
+    */
     const char *verbose_args = "-vvv";
     _vlcInstance = libvlc_new(1, &verbose_args);
 #else

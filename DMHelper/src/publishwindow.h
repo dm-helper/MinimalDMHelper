@@ -4,7 +4,7 @@
 #include <QMainWindow>
 
 class PublishGLFrame;
-class PublishGLRenderer;
+class PublishGLMapRenderer;
 
 class PublishWindow : public QMainWindow
 {
@@ -12,13 +12,13 @@ class PublishWindow : public QMainWindow
 public:
     explicit PublishWindow(const QString& title, QWidget *parent = nullptr);
 
-    PublishGLRenderer* getRenderer() const;
+    PublishGLMapRenderer* getRenderer() const;
 
 public slots:
     void setBackgroundColor();
     void setBackgroundColor(const QColor& color);
 
-    void setRenderer(PublishGLRenderer* renderer);
+    void setRenderer(PublishGLMapRenderer* renderer);
 
 protected:
     virtual void keyPressEvent(QKeyEvent * event);

@@ -9,14 +9,16 @@
 #include <QDebug>
 
 PublishGLMapRenderer::PublishGLMapRenderer(QObject *parent) :
-    PublishGLRenderer(parent),
+    QObject(parent),
+    _targetWidget(nullptr),
     _targetSize(),
     _color(),
     _projectionMatrix(),
     _cameraRect(),
     _initialized(false),
     _shaderProgram(0),
-    _shaderModelMatrix(0)
+    _shaderModelMatrix(0),
+    _videoPlayer(nullptr)
 {
 }
 
@@ -29,9 +31,36 @@ QColor PublishGLMapRenderer::getBackgroundColor()
     return _color;
 }
 
+void PublishGLMapRenderer::rendererActivated(QOpenGLWidget* glWidget)
+{
+    _targetWidget = glWidget;
+
+    if((_targetWidget) && (_targetWidget->context()))
+        connect(_targetWidget->context(), &QOpenGLContext::aboutToBeDestroyed, this, &PublishGLMapRenderer::cleanup);
+}
+
+void PublishGLMapRenderer::rendererDeactivated()
+{
+    qDebug() << "[PublishGLMapRenderer] Renderer deactivated: " << this;
+    if((_targetWidget) && (_targetWidget->context()))
+        disconnect(_targetWidget->context(), &QOpenGLContext::aboutToBeDestroyed, this, &PublishGLMapRenderer::cleanup);
+
+    cleanup();
+
+    emit deactivated();
+    _targetWidget = nullptr;
+}
+
 void PublishGLMapRenderer::cleanup()
 {
     _initialized = false;
+
+    if(_videoPlayer)
+    {
+        VideoPlayerGLPlayer* deletePlayer = _videoPlayer;
+        _videoPlayer = nullptr;
+        deletePlayer->stopThenDelete();
+    }
 
     _projectionMatrix.setToIdentity();
 
@@ -46,8 +75,6 @@ void PublishGLMapRenderer::cleanup()
         _shaderProgram = 0;
     }
     _shaderModelMatrix = 0;
-
-    PublishGLRenderer::cleanup();
 }
 
 bool PublishGLMapRenderer::deleteOnDeactivation()
@@ -179,13 +206,6 @@ void PublishGLMapRenderer::paintGL()
     if((!_initialized) || (!_targetSize.isValid()) || (!_targetWidget) || (!_targetWidget->context()))
         return;
 
-    if(!isBackgroundReady())
-    {
-        updateBackground();
-        if(!isBackgroundReady())
-            return;
-    }
-
     updateProjectionMatrix();
 
     QOpenGLFunctions *f = _targetWidget->context()->functions();
@@ -229,11 +249,44 @@ void PublishGLMapRenderer::updateProjectionMatrix()
                             -1000.f, 1000.f);
 }
 
-void PublishGLMapRenderer::updateBackground()
+void PublishGLMapRenderer::initializeBackground()
 {
+    // Create the objects
+    _videoPlayer = new VideoPlayerGLPlayer(QString("./Airship_gridLN.m4v"),
+                                           _targetWidget->context(),
+                                           _targetWidget->format(),
+                                           _targetSize,
+                                           true,
+                                           false);
+    connect(_videoPlayer, &VideoPlayerGLPlayer::frameAvailable, this, &PublishGLMapRenderer::updateWidget);
+    connect(_videoPlayer, &VideoPlayerGLPlayer::vbObjectsCreated, this, &PublishGLMapRenderer::updateProjectionMatrix);
+    _videoPlayer->restartPlayer();
 }
 
-void PublishGLMapRenderer::updateContents()
+void PublishGLMapRenderer::resizeBackground(int w, int h)
 {
+    Q_UNUSED(w);
+    Q_UNUSED(h);
 
+    if(!_videoPlayer)
+        return;
+
+    _videoPlayer->targetResized(_targetSize);
+    _videoPlayer->initializationComplete();
+    updateProjectionMatrix();
+}
+
+void PublishGLMapRenderer::paintBackground(QOpenGLFunctions* functions)
+{
+    if(!_videoPlayer)
+        return;
+
+    QMatrix4x4 modelMatrix;
+    functions->glUniformMatrix4fv(_shaderModelMatrix, 1, GL_FALSE, modelMatrix.constData());
+    _videoPlayer->paintGL();
+}
+
+QSizeF PublishGLMapRenderer::getBackgroundSize()
+{
+    return _videoPlayer ? _videoPlayer->getSize() : QSizeF();
 }

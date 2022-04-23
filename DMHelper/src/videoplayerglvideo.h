@@ -7,7 +7,7 @@
 #include <QMutex>
 #include <QSize>
 
-class VideoPlayerGL;
+class VideoPlayerGLPlayer;
 class QOpenGLContext;
 class QOpenGLFramebufferObject;
 class QOffscreenSurface;
@@ -16,7 +16,7 @@ class VideoPlayerGLVideo : public QObject
 {
     Q_OBJECT
 public:
-    VideoPlayerGLVideo(VideoPlayerGL* player);
+    VideoPlayerGLVideo(VideoPlayerGLPlayer* player);
     virtual ~VideoPlayerGLVideo();
 
     bool isNewFrameAvailable();
@@ -36,7 +36,7 @@ protected slots:
     void configureContext(QOpenGLContext *renderContext);
 
 protected:
-    VideoPlayerGL *_player;
+    VideoPlayerGLPlayer *_player;
     QOpenGLContext *_context;
     QOffscreenSurface *_surface;
     QSemaphore _videoReady;

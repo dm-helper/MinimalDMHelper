@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 #include "publishwindow.h"
 #include "dmh_vlc.h"
-#include "publishglmapvideorenderer.h"
+#include "publishglmaprenderer.h"
 #include <QDebug>
 #include <QDir>
 #include <QLibraryInfo>
@@ -71,7 +71,7 @@ void MainWindow::showPublishWindow(bool clicked)
     _pubWindow->show();
 
     if(clicked)
-        _pubWindow->setRenderer(new PublishGLMapVideoRenderer());
+        _pubWindow->setRenderer(new PublishGLMapRenderer());
     else
         _pubWindow->setRenderer(nullptr);
 }

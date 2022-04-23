@@ -1,6 +1,6 @@
 #include "publishwindow.h"
 #include "publishglframe.h"
-#include "publishglrenderer.h"
+#include "publishglmaprenderer.h"
 #include <QKeyEvent>
 #include <QDebug>
 
@@ -19,7 +19,7 @@ PublishWindow::PublishWindow(const QString& title, QWidget *parent) :
     setBackgroundColor();
 }
 
-PublishGLRenderer* PublishWindow::getRenderer() const
+PublishGLMapRenderer* PublishWindow::getRenderer() const
 {
     return _publishFrame ? _publishFrame->getRenderer() : nullptr;
 }
@@ -43,7 +43,7 @@ void PublishWindow::setBackgroundColor(const QColor& color)
     }
 }
 
-void PublishWindow::setRenderer(PublishGLRenderer* renderer)
+void PublishWindow::setRenderer(PublishGLMapRenderer* renderer)
 {
     if(renderer)
         renderer->setBackgroundColor(_globalColor);

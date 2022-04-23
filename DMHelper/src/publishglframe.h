@@ -3,7 +3,7 @@
 
 #include <QOpenGLWidget>
 
-class PublishGLRenderer;
+class PublishGLMapRenderer;
 
 class PublishGLFrame : public QOpenGLWidget
 {
@@ -13,13 +13,13 @@ public:
     virtual ~PublishGLFrame() override;
 
     bool isInitialized() const;
-    PublishGLRenderer* getRenderer() const;
+    PublishGLMapRenderer* getRenderer() const;
 
 public slots:
     void cleanup();
     void updateWidget();
 
-    void setRenderer(PublishGLRenderer* renderer);
+    void setRenderer(PublishGLMapRenderer* renderer);
     void clearRenderer();
 
     void setBackgroundColor(const QColor& color);
@@ -35,7 +35,7 @@ protected slots:
 private:
     bool _initialized;
     QSize _targetSize;
-    PublishGLRenderer* _renderer;
+    PublishGLMapRenderer* _renderer;
 
 };
 

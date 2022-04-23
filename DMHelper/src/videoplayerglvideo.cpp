@@ -7,7 +7,7 @@
 
 #define VIDEO_DEBUG_MESSAGES
 
-VideoPlayerGLVideo::VideoPlayerGLVideo(VideoPlayerGL* player) :
+VideoPlayerGLVideo::VideoPlayerGLVideo(VideoPlayerGLPlayer* player) :
     _player(player),
     _context(nullptr),
     _surface(nullptr),
@@ -36,7 +36,7 @@ VideoPlayerGLVideo::VideoPlayerGLVideo(VideoPlayerGL* player) :
     _surface = new QOffscreenSurface(nullptr, player);
 
     // Player doesn't have an established OpenGL context right now, we'll get it later
-    connect(player, &VideoPlayerGL::contextReady, this, &VideoPlayerGLVideo::configureContext);
+    connect(player, &VideoPlayerGLPlayer::contextReady, this, &VideoPlayerGLVideo::configureContext);
 }
 
 VideoPlayerGLVideo::~VideoPlayerGLVideo()

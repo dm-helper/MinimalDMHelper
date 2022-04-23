@@ -26,10 +26,7 @@ SOURCES += main.cpp\
     mainwindow.cpp \
     publishglframe.cpp \
     publishglmaprenderer.cpp \
-    publishglmapvideorenderer.cpp \
-    publishglrenderer.cpp \
     publishwindow.cpp \
-    videoplayergl.cpp \
     videoplayerglplayer.cpp \
     videoplayerglvideo.cpp
 
@@ -38,11 +35,7 @@ HEADERS  += mainwindow.h \
     dmhlogger.h \
     publishglframe.h \
     publishglmaprenderer.h \
-    publishglmapvideorenderer.h \
-    publishglrenderer.h \
     publishwindow.h \
-    dmconstants.h \
-    videoplayergl.h \
     videoplayerglplayer.h \
     videoplayerglvideo.h
 

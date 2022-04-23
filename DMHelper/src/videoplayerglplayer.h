@@ -1,7 +1,6 @@
 #ifndef VIDEOPLAYERGLPLAYER_H
 #define VIDEOPLAYERGLPLAYER_H
 
-#include "videoplayergl.h"
 #include <QObject>
 #include <QMutex>
 #include <QImage>
@@ -14,7 +13,7 @@
 
 class VideoPlayerGLVideo;
 
-class VideoPlayerGLPlayer : public VideoPlayerGL
+class VideoPlayerGLPlayer : public QObject
 {
     Q_OBJECT
 public:
@@ -31,17 +30,18 @@ public:
 
     virtual bool isError() const;
     virtual QSize getOriginalSize() const;
-    virtual void registerNewFrame() override;
+    virtual void registerNewFrame();
 
-    virtual QSurfaceFormat getFormat() const override;
-    virtual QSize getSize() const override;
+    virtual QSurfaceFormat getFormat() const;
+    virtual QSize getSize() const;
 
     QImage getLastScreenshot();
 
     static void playerEventCallback( const struct libvlc_event_t *p_event, void *p_data );
 
-
 signals:
+    void contextReady(QOpenGLContext *renderContext);
+
     void videoOpening();
     void videoPlaying();
     void videoBuffering();
@@ -55,16 +55,16 @@ public slots:
     virtual void stopThenDelete();
     virtual bool restartPlayer();
 
-    virtual void videoResized() override;
+    virtual void videoResized();
 
     void initializationComplete();
 
 protected:
     virtual void timerEvent(QTimerEvent *event) override;
 
-    virtual bool initializeVLC() override;
-    virtual bool startPlayer() override;
-    virtual bool stopPlayer() override;
+    virtual bool initializeVLC();
+    virtual bool startPlayer();
+    virtual bool stopPlayer();
 
     void cleanupPlayer();
 
