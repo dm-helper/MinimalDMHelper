@@ -1,0 +1,27 @@
+{
+    "rdocCaptureSettings": 1,
+    "settings": {
+        "autoStart": true,
+        "commandLine": "",
+        "environment": [
+        ],
+        "executable": "C:\\Users\\turne\\Documents\\GitHub\\MinimalDMHelper\\DMHelper\\bin32\\DMHelper.exe",
+        "inject": false,
+        "numQueuedFrames": 6,
+        "options": {
+            "allowFullscreen": true,
+            "allowVSync": true,
+            "apiValidation": true,
+            "captureAllCmdLists": true,
+            "captureCallstacks": true,
+            "captureCallstacksOnlyDraws": false,
+            "debugOutputMute": true,
+            "delayForDebugger": 0,
+            "hookIntoChildren": false,
+            "refAllResources": true,
+            "verifyBufferAccess": true
+        },
+        "queuedFrameCap": 0,
+        "workingDir": ""
+    }
+}

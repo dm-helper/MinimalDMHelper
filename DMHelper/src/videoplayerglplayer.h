@@ -17,7 +17,7 @@ class VideoPlayerGLPlayer : public QObject
 {
     Q_OBJECT
 public:
-    VideoPlayerGLPlayer(const QString& videoFile, QOpenGLContext* context, QSurfaceFormat format, QSize targetSize, bool playVideo = true, bool playAudio = true, QObject *parent = nullptr);
+    VideoPlayerGLPlayer(const QString& videoFile, QOpenGLContext* context, QSurfaceFormat format, bool playVideo = true, bool playAudio = true, QObject *parent = nullptr);
     virtual ~VideoPlayerGLPlayer();
 
     virtual const QString& getFileName() const;
@@ -38,6 +38,8 @@ public:
     QImage getLastScreenshot();
 
     static void playerEventCallback( const struct libvlc_event_t *p_event, void *p_data );
+    virtual bool isPlaying() const;
+    GLuint getfboTexture() const;
 
 signals:
     void contextReady(QOpenGLContext *renderContext);
@@ -51,7 +53,6 @@ signals:
     void vbObjectsCreated();
 
 public slots:
-    virtual void targetResized(const QSize& newSize);
     virtual void stopThenDelete();
     virtual bool restartPlayer();
 
@@ -73,7 +74,6 @@ protected:
 
     virtual void internalAudioCheck(int newStatus);
 
-    virtual bool isPlaying() const;
     virtual bool isPaused() const;
     virtual bool isProcessing() const;
     virtual bool isStatusValid() const;
@@ -91,7 +91,6 @@ protected:
     bool _vlcError;
     libvlc_media_player_t* _vlcPlayer;
     libvlc_media_t* _vlcMedia;
-    QSize _targetSize;
     int _status;
     bool _selfRestart;
     bool _deleteOnStop;
@@ -104,6 +103,8 @@ protected:
     unsigned int _VBO;
     unsigned int _EBO;
 
+    unsigned int _tempTexture;
+    int _frameCount;
 };
 
 #endif // VIDEOPLAYERGLPLAYER_H

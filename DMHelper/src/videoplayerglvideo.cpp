@@ -17,8 +17,12 @@ VideoPlayerGLVideo::VideoPlayerGLVideo(VideoPlayerGLPlayer* player) :
     _textLock(),
     _buffers(),
     _idxRender(0),
-    _idxSwapRender(1),
-    _idxDisplay(2),
+//    _idxSwapRender(1),
+//    _idxDisplay(2),
+    _idxSwapA(1),
+    _idxSwapB(2),
+    _idxSwapC(3),
+    _idxDisplay(4),
     _updated(false),
     _initialized(false),
     _frameCount(0)
@@ -28,6 +32,8 @@ VideoPlayerGLVideo::VideoPlayerGLVideo(VideoPlayerGLPlayer* player) :
     _buffers[0] = nullptr;
     _buffers[1] = nullptr;
     _buffers[2] = nullptr;
+    _buffers[3] = nullptr;
+    _buffers[4] = nullptr;
 
     // Use default format for context
     _context = new QOpenGLContext(player);
@@ -66,13 +72,17 @@ QOpenGLFramebufferObject *VideoPlayerGLVideo::getVideoFrame()
 
     if(isNewFrameAvailable())
     {
-        std::swap(_idxSwapRender, _idxDisplay);
+        std::swap(_idxSwapC, _idxDisplay);
+        std::swap(_idxSwapB, _idxSwapC);
+        std::swap(_idxSwapA, _idxSwapB);
         #ifdef VIDEO_DEBUG_MESSAGES
-            qDebug() << "[VideoPlayerGLPlayer] New frame is available, swapping SwapRender (" << _idxSwapRender << ") and Display (" << _idxDisplay << ") to return buffer " << _buffers[_idxDisplay];
+            //qDebug() << "[VideoPlayerGLPlayer] New frame is available, swapping SwapRender (" << _idxSwapRender << ") and Display (" << _idxDisplay << ") to return buffer " << _buffers[_idxDisplay];
+            qDebug() << "[VideoPlayerGLPlayer] New frame " << _idxDisplay << " is available, stack: " << _idxDisplay << " - (" << _idxSwapC << "-" << _idxSwapB << "-" << _idxSwapA << ") - " << _idxRender;
         #endif
 
         _updated = false;
     }
+
     return _buffers[_idxDisplay];
 }
 
@@ -101,6 +111,8 @@ bool VideoPlayerGLVideo::resizeRenderTextures(void* data,
         that->_buffers[0] = new QOpenGLFramebufferObject(cfg->width, cfg->height);
         that->_buffers[1] = new QOpenGLFramebufferObject(cfg->width, cfg->height);
         that->_buffers[2] = new QOpenGLFramebufferObject(cfg->width, cfg->height);
+        that->_buffers[3] = new QOpenGLFramebufferObject(cfg->width, cfg->height);
+        that->_buffers[4] = new QOpenGLFramebufferObject(cfg->width, cfg->height);
 
         that->_width = cfg->width;
         that->_height = cfg->height;
@@ -176,6 +188,8 @@ void VideoPlayerGLVideo::cleanup(void* data)
     delete that->_buffers[0]; that->_buffers[0] = nullptr;
     delete that->_buffers[1]; that->_buffers[1] = nullptr;
     delete that->_buffers[2]; that->_buffers[2] = nullptr;
+    delete that->_buffers[3]; that->_buffers[3] = nullptr;
+    delete that->_buffers[4]; that->_buffers[4] = nullptr;
 }
 
 //This callback is called after VLC performs drawing calls
@@ -190,7 +204,7 @@ void VideoPlayerGLVideo::swap(void* data)
         return;
 
     QMutexLocker locker(&that->_textLock);
-    std::swap(that->_idxSwapRender, that->_idxRender);
+    std::swap(that->_idxSwapA, that->_idxRender);
     that->_buffers[that->_idxRender]->bind();
     that->_updated = true;
     locker.unlock();

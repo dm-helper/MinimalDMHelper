@@ -13,6 +13,8 @@ set PATH=%QT_DIR%\%QT_VERSION%\msvc%MSVC_VERSION%\bin;%QT_DIR%\Tools\QtInstaller
 
 rmdir /s /q ..\bin32
 mkdir ..\bin32
+mkdir ..\bin32\pkgconfig
+mkdir ..\bin32\plugins
 
 cd ..
 
@@ -36,8 +38,8 @@ cd build-32_bit-release
 
 xcopy .\release\DMHelper.exe ..\bin32\
 xcopy ..\src\binsrc\* ..\bin32\*
-xcopy /s ..\src\binsrc\pkgconfig\* ..\bin32\*
-xcopy /s ..\src\binsrc\plugins\* ..\bin32\*
+xcopy /s ..\src\binsrc\pkgconfig\* ..\bin32\pkgconfig\*
+xcopy /s ..\src\binsrc\plugins\* ..\bin32\plugins\*
 
 windeployqt --compiler-runtime --no-opengl-sw --no-angle --no-svg ..\bin32
 

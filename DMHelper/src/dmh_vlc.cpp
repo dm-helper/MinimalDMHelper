@@ -16,8 +16,18 @@ DMH_VLC::DMH_VLC() :
     };
     _vlcInstance = libvlc_new(sizeof(args) / sizeof(*args), args);
     */
-    const char *verbose_args = "-vvv";
-    _vlcInstance = libvlc_new(1, &verbose_args);
+//    const char *verbose_args = "-vvv";
+    //const char *verbose_args = "--plugins-cache";
+//    _vlcInstance = libvlc_new(1, &verbose_args);
+
+    const char *args[] = {
+        "--no-reset-plugins-cache",
+        "--plugins-cache",
+        "--no-plugins-scan",
+        ""
+    };
+    _vlcInstance = libvlc_new(sizeof(args) / sizeof(*args), args);
+
 #else
     _vlcInstance = libvlc_new(0, nullptr);
 #endif

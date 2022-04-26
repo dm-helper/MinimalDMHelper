@@ -12,7 +12,7 @@ const int stopConfirmed = 0x02;
 const int stopComplete = stopCallComplete | stopConfirmed;
 const int INVALID_TRACK_ID = -99999;
 
-VideoPlayerGLPlayer::VideoPlayerGLPlayer(const QString& videoFile, QOpenGLContext* context, QSurfaceFormat format, QSize targetSize, bool playVideo, bool playAudio, QObject *parent) :
+VideoPlayerGLPlayer::VideoPlayerGLPlayer(const QString& videoFile, QOpenGLContext* context, QSurfaceFormat format, bool playVideo, bool playAudio, QObject *parent) :
     QObject(parent),
     _videoFile(videoFile),
     _context(context),
@@ -21,11 +21,10 @@ VideoPlayerGLPlayer::VideoPlayerGLPlayer(const QString& videoFile, QOpenGLContex
     _playVideo(playVideo),
     _playAudio(playAudio),
     _video(nullptr),
-    _fboTexture(-1),
+    _fboTexture(0),
     _vlcError(false),
     _vlcPlayer(nullptr),
     _vlcMedia(nullptr),
-    _targetSize(targetSize),
     _status(-1),
     _selfRestart(false),
     _deleteOnStop(false),
@@ -35,7 +34,10 @@ VideoPlayerGLPlayer::VideoPlayerGLPlayer(const QString& videoFile, QOpenGLContex
     _modelMatrix(),
     _VAO(0),
     _VBO(0),
-    _EBO(0)
+    _EBO(0),
+
+    _tempTexture(0),
+    _frameCount(0)
 {
     if(_context)
     {
@@ -75,30 +77,61 @@ const QString& VideoPlayerGLPlayer::getFileName() const
 void VideoPlayerGLPlayer::paintGL()
 {
     if((!_context) || (!_video))
+    {
+        qDebug() << "[VideoPlayerGLPlayer] Background paint ABORTED!!!!!!!!!!";
         return;
+    }
 
     QOpenGLFunctions *f = _context->functions();
     QOpenGLExtraFunctions *e = _context->extraFunctions();
     if((!f) || (!e))
+    {
+        qDebug() << "[VideoPlayerGLPlayer] Background paint ABORTED!!!!!!!!!!";
         return;
+    }
 
     bool newFrame = _video->isNewFrameAvailable();
-    if(newFrame)
+    if((newFrame) && (++_frameCount > 0))
+    //if(newFrame)
     {
+#ifdef VIDEO_DEBUG_MESSAGES
+        qDebug() << "[VideoPlayerGLPlayer] New frame";
+#endif
         QOpenGLFramebufferObject *fbo = _video->getVideoFrame();
         if(fbo)
         {
+#ifdef VIDEO_DEBUG_MESSAGES
+            if(!fbo->isValid())
+                qDebug() << "[VideoPlayerGLPlayer] ERROR: invalid frame buffer object: " << fbo;
+#endif
+
             if(_fboTexture > 0)
             {
+#ifdef VIDEO_DEBUG_MESSAGES
+            qDebug() << "[VideoPlayerGLPlayer] Deleting old texture: " << _fboTexture;
+#endif
                 f->glDeleteTextures(1, &_fboTexture);
                 _fboTexture = -1;
             }
             _fboTexture = fbo->takeTexture();
+            _frameCount = 0;
+#ifdef VIDEO_DEBUG_MESSAGES
+            qDebug() << "[VideoPlayerGLPlayer] New Texture: " << _fboTexture;
+#endif
         }
+    }
+    else
+    {
+#ifdef VIDEO_DEBUG_MESSAGES
+        qDebug() << "[VideoPlayerGLPlayer] Reusing Texture: " << _fboTexture;
+#endif
     }
 
     if(_fboTexture <= 0)
+    {
+        qDebug() << "[VideoPlayerGLPlayer] Background paint ABORTED!!!!!!!!!!";
         return;
+    }
 
     e->glBindVertexArray(_VAO);
 
@@ -107,6 +140,7 @@ void VideoPlayerGLPlayer::paintGL()
 #endif
 
     f->glBindTexture(GL_TEXTURE_2D, _fboTexture);
+    //f->glBindTexture(GL_TEXTURE_2D, _tempTexture);
     f->glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
@@ -230,16 +264,6 @@ void VideoPlayerGLPlayer::playerEventCallback( const struct libvlc_event_t *p_ev
     };
 
     that->_status = p_event->type;
-}
-
-void VideoPlayerGLPlayer::targetResized(const QSize& newSize)
-{
-    qDebug() << "[VideoPlayerGLPlayer] Target window resized: " << newSize;
-    _targetSize = newSize;
-
-#ifdef VIDEO_DEBUG_MESSAGES
-    qDebug() << "[VideoPlayerGLPlayer] Target window resize completed";
-#endif
 }
 
 void VideoPlayerGLPlayer::stopThenDelete()
@@ -398,6 +422,8 @@ bool VideoPlayerGLPlayer::startPlayer()
     // And start playback
     libvlc_media_player_play(_vlcPlayer);
 
+    createVBObjects();
+
     qDebug() << "[VideoPlayerGLPlayer] Player started";
 
     return true;
@@ -449,7 +475,27 @@ void VideoPlayerGLPlayer::createVBObjects()
     if((!f) || (!e))
         return;
 
-    _videoSize = _video->getVideoSize();
+
+    // Texture
+    f->glGenTextures(1, &_tempTexture);
+    f->glBindTexture(GL_TEXTURE_2D, _tempTexture);
+    // set the texture wrapping/filtering options (on the currently bound texture object)
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+
+    // load and generate the background texture
+    QImage image(QString("mountainruins.png"));
+
+    QImage glBackgroundImage = image.convertToFormat(QImage::Format_RGBA8888).mirrored();
+    f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glBackgroundImage.width(), glBackgroundImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glBackgroundImage.bits());
+    f->glGenerateMipmap(GL_TEXTURE_2D);
+
+
+//    _videoSize = _video->getVideoSize();
+    _videoSize = image.size();
     if((_videoSize.width() <= 0) || (_videoSize.height() <= 0))
         return;
 
@@ -544,6 +590,11 @@ void VideoPlayerGLPlayer::internalAudioCheck(int newStatus)
         libvlc_audio_set_track(_vlcPlayer, -1);
 
     qDebug() << "[VideoPlayerGLPlayer] Audio turning off completed";
+}
+
+GLuint VideoPlayerGLPlayer::getfboTexture() const
+{
+    return _fboTexture;
 }
 
 bool VideoPlayerGLPlayer::isPlaying() const

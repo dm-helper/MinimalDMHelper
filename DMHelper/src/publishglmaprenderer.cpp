@@ -139,8 +139,12 @@ void PublishGLMapRenderer::initializeGL()
         "uniform sampler2D texture1;\n"
         "void main()\n"
         "{\n"
-        "    FragColor = texture(texture1, TexCoord); // FragColor = vec4(ourColor, 1.0f);\n"
+            "    FragColor = texture(texture1, TexCoord);\n"
         "}\0";
+
+//    "    FragColor = texture(texture1, TexCoord);\n"
+//    "    FragColor = vec4(ourColor, 1.0f);\n"
+//    "    FragColor = vec4(0.f, 0.f, 0.f, 1.0f);\n"
 
     unsigned int fragmentShader;
     fragmentShader = f->glCreateShader(GL_FRAGMENT_SHADER);
@@ -206,15 +210,22 @@ void PublishGLMapRenderer::paintGL()
     if((!_initialized) || (!_targetSize.isValid()) || (!_targetWidget) || (!_targetWidget->context()))
         return;
 
-    updateProjectionMatrix();
-
     QOpenGLFunctions *f = _targetWidget->context()->functions();
     QOpenGLExtraFunctions *e = _targetWidget->context()->extraFunctions();
     if((!f) || (!e))
         return;
 
+    updateProjectionMatrix();
+
     // Draw the scene
-    f->glClearColor(_color.redF(), _color.greenF(), _color.blueF(), 1.0f);
+    if((!_videoPlayer) || (!_videoPlayer->isPlaying()) || (_videoPlayer->getfboTexture() == 0))
+    {
+        f->glClearColor(1.f, 0.f, 0.f, 1.0f);
+    }
+    else
+    {
+        f->glClearColor(_color.redF(), _color.greenF(), _color.blueF(), 1.0f);
+    }
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     f->glUseProgram(_shaderProgram);
@@ -255,7 +266,6 @@ void PublishGLMapRenderer::initializeBackground()
     _videoPlayer = new VideoPlayerGLPlayer(QString("./Airship_gridLN.m4v"),
                                            _targetWidget->context(),
                                            _targetWidget->format(),
-                                           _targetSize,
                                            true,
                                            false);
     connect(_videoPlayer, &VideoPlayerGLPlayer::frameAvailable, this, &PublishGLMapRenderer::updateWidget);
@@ -271,7 +281,6 @@ void PublishGLMapRenderer::resizeBackground(int w, int h)
     if(!_videoPlayer)
         return;
 
-    _videoPlayer->targetResized(_targetSize);
     _videoPlayer->initializationComplete();
     updateProjectionMatrix();
 }
@@ -279,7 +288,10 @@ void PublishGLMapRenderer::resizeBackground(int w, int h)
 void PublishGLMapRenderer::paintBackground(QOpenGLFunctions* functions)
 {
     if(!_videoPlayer)
+    {
+        qDebug() << "[PublishGLMapRenderer] Background paint ABORTED!!!!!!!!!!";
         return;
+    }
 
     QMatrix4x4 modelMatrix;
     functions->glUniformMatrix4fv(_shaderModelMatrix, 1, GL_FALSE, modelMatrix.constData());

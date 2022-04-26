@@ -57,6 +57,7 @@ protected:
     unsigned int _shaderProgram;
     int _shaderModelMatrix;
     VideoPlayerGLPlayer* _videoPlayer;
+
 };
 
 #endif // PUBLISHGLMAPRENDERER_H
